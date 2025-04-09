@@ -27,7 +27,7 @@ const Sidebar: React.FC= () => {
         <Toolbar />
         <Box sx={{ overflow: 'auto' }}>
             <List>
-            {['Alice', 'Bob', 'Charlie'].map((text) => (
+            {['Test1', 'Test2', 'Test3'].map((text) => (
                 <ListItem component="div" key={text}>
                     <ListItemText primary={text} />
                 </ListItem>
