@@ -6,8 +6,25 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 
-const Sidebar: React.FC= () => {
+interface User {
+    id: number;
+    name: string;
+}
+
+interface SidebarProps {
+  setReceiverId: (id: number) => void;
+}
+const Sidebar: React.FC<SidebarProps>= ({ setReceiverId }) => {
   let drawerWidth = 300;
+  
+  const userList: User[] = [
+    { id: 2, name: "John" },
+    { id: 3, name: "Alice" },
+    { id: 4, name: "Bob" },
+    { id: 5, name: "Charlie" },
+    { id: 6, name: "David" },
+    { id: 7, name: "Eve" },
+  ];
   
   return (
     <Drawer
@@ -27,9 +44,9 @@ const Sidebar: React.FC= () => {
         <Toolbar />
         <Box sx={{ overflow: 'auto' }}>
             <List>
-            {['Test1', 'Test2', 'Test3'].map((text) => (
-                <ListItem component="div" key={text}>
-                    <ListItemText primary={text} />
+            {userList.map((user) => (
+                <ListItem component="div" key={user.id} onClick={() => setReceiverId(user.id)}>
+                    <ListItemText primary={user.name} />
                 </ListItem>
             ))}
             </List>

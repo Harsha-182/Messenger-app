@@ -1,4 +1,5 @@
 import { UserController } from "./controller/UserController"
+import { MessageController }  from "./controller/MessageCOntroller"
 
 export const Routes = [{
     method: "get",
@@ -20,5 +21,10 @@ export const Routes = [{
     route: "/users/:id",
     controller: UserController,
     action: "remove"
+}, {
+    method: "get",
+    route: "/messages",
+    controller: MessageController,
+    action: "all"
 }
 ]
