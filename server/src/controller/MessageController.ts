@@ -30,11 +30,11 @@ export class MessageController {
                 // created_at: msg.created_at,
                 sender: {
                   id: msg.sender.id,
-                  name: msg.sender.username, // or email/username
+                  name: msg.sender.name,
                 },
                 receiver: {
                   id: msg.receiver.id,
-                  name: msg.receiver.username,
+                  name: msg.receiver.name,
                 },
               }));
               

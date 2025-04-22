@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 import Login from './components/Authentication/Login';
 import Dashboard from './components/Messenger/MessengerGrid';
+import Callback from './components/Callback';
 
 const NavigationRoutes: React.FC = () => {
   return(
@@ -10,6 +11,7 @@ const NavigationRoutes: React.FC = () => {
           <Routes>
               <Route path="/login" Component={Login} />
               <Route path="/dashboard/" Component={Dashboard}/>
+              <Route path="/callback" Component={Callback} />
           </Routes>
       </Router>
   )

@@ -1,11 +1,14 @@
 import { UserController } from "./controller/UserController"
-import { MessageController }  from "./controller/MessageCOntroller"
+import { MessageController }  from "./controller/MessageController"
+import { checkJwt } from './middleware/auth';
+import { SyncUserController } from "./controller/SyncUserController";
 
 export const Routes = [{
     method: "get",
     route: "/users",
     controller: UserController,
-    action: "all"
+    action: "all",
+    middlewares: [checkJwt]
 }, {
     method: "get",
     route: "/users/:id",
@@ -26,5 +29,10 @@ export const Routes = [{
     route: "/messages",
     controller: MessageController,
     action: "all"
+},{
+    method: "post",
+    route: "/syncuser",
+    controller: SyncUserController,
+    action: "save"
 }
 ]

@@ -1,13 +1,19 @@
 import httpHelper from '../../Helper/httpHelper';
+import { Dispatch } from 'redux';
 
-export function getMessages(formData = {}) {
-    return async(dispatch: (arg0: { type: string; payload: any; }) => void) => {
+interface FormData {
+    senderId?: number;
+    receiverId?: number;
+}
+
+export function getMessages(formData: FormData = {}) {
+    return async(dispatch: Dispatch): Promise<void> => {
         if(Object.keys(formData).length > 0) {
             const request = {
-                url: '/messages',
+                url: `/messages?senderId=2&recieverId=${formData.receiverId}`,
                 method: 'GET' as const,
                 header: {'Access-Control-Allow-Origin': true},
-                data: formData,
+                // data: {senderId: 2, receiverId: formData.receiverId},
             };
 
             await httpHelper(

@@ -1,4 +1,7 @@
 import React, {useEffect, useState} from 'react';
+import { useDispatch, useSelector} from 'react-redux';
+import { useAuth0 } from '@auth0/auth0-react';
+
 import {
   Box,
   CssBaseline,
@@ -7,22 +10,35 @@ import {
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import MainChat from './MainChat';
- 
+import { RootState } from '../../store';
+
 const MessengerGrid = () => {
+  const dispatch = useDispatch();
+  const { loginWithRedirect, isAuthenticated } = useAuth0();
+
   const [senderId, setSenderId] = useState<number | null>(2);
   const [receiverId, setReceiverId] = useState<number | null>(null);
 
-  console.log("receiverId", receiverId)
-         return(
-            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-                <CssBaseline />
-                <Navbar/>
-                <Box sx={{ display: 'flex', flexGrow: 1 }}>
-                    <Sidebar setReceiverId={setReceiverId}/>
-                    <MainChat senderId={senderId} receiverId={receiverId}/>
-                </Box>
-            </Box>
-         )
+  useEffect(() => {
+    if(!isAuthenticated){
+      loginWithRedirect()
+    }
+  },[isAuthenticated])
+
+  return(
+    <div>
+        <>
+          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+              <CssBaseline />
+              <Navbar/>
+              <Box sx={{ display: 'flex', flexGrow: 1 }}>
+                  <Sidebar setReceiverId={setReceiverId}/>
+                  <MainChat senderId={senderId} receiverId={receiverId}/>
+              </Box>
+          </Box>
+        </>
+    </div>
+  )
 }
 
 export default MessengerGrid;

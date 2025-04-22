@@ -1,14 +1,12 @@
 import { combineReducers } from 'redux';
-import {GetMessageReducer } from './message_reducer/getMessage';
+import { GetMessageReducer } from './message_reducer/getMessage';
+import { GetUsersreducer } from './user_reducer/getUser';
+import { SyncUserreducer } from './user_reducer/syncUser';
 
-// Define the shape of the state
-// export interface RootState {
-//     Message: ReturnType<typeof GetMessageReducer>;
-// }
-
-// Combine reducers with proper typing
-const Reducers = combineReducers({
+const reducers = combineReducers({
     Message: GetMessageReducer,
+    Users: GetUsersreducer,
+    SyncUser: SyncUserreducer,
 });
 
-export default Reducers;
+export default reducers;

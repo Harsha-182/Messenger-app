@@ -7,7 +7,11 @@ interface HttpObject {
     url: string;
     data?: any;
     params?: any;
-    headers?: { [key: string]: string };
+    headers?: {
+        Authorization: string;
+        'Content-Type': string;
+        'Access-Control-Allow-Origin': string;
+    };
 }
 
 type SuccessHandler = (data: any) => void;

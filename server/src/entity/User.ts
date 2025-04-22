@@ -8,16 +8,19 @@ export class User {
     id: number
 
     @Column()
-    username: string
+    name: string
 
-    @Column()
-    password: string
+    @Column({nullable: true})
+    nickname: string
 
     @Column()
     email: string
 
     @Column()
-    age: number
+    sub: string
+
+    @Column()
+    picture: string
 
     @OneToMany(() => Messages, (message) => message.sender)
     sender: Messages[]

@@ -1,10 +1,15 @@
-import * as React from 'react';
+import React, {useState, useEffect} from 'react';
+import { useDispatch, useSelector} from 'react-redux';
+
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import Toolbar from '@mui/material/Toolbar';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
+import { AppDispatch } from '../../store';
+import { getMessages } from "../actions/message_action/getMessages";
+import { RootState } from '../../store';
 
 interface User {
     id: number;
@@ -14,18 +19,23 @@ interface User {
 interface SidebarProps {
   setReceiverId: (id: number) => void;
 }
-const Sidebar: React.FC<SidebarProps>= ({ setReceiverId }) => {
-  let drawerWidth = 300;
-  
-  const userList: User[] = [
-    { id: 2, name: "John" },
-    { id: 3, name: "Alice" },
-    { id: 4, name: "Bob" },
-    { id: 5, name: "Charlie" },
-    { id: 6, name: "David" },
-    { id: 7, name: "Eve" },
-  ];
-  
+const Sidebar: React.FC<SidebarProps> = ({ setReceiverId }) => {
+    const [users, setUsers] = useState<User[]>([]);
+
+    const dispatch = useDispatch<AppDispatch>();
+    const usersStatus = useSelector((state: RootState) => state.Users);
+    let drawerWidth = 300;
+
+    useEffect(() => {
+        if (usersStatus && usersStatus.data) {
+            setUsers(usersStatus.data);
+        }
+    },[usersStatus])
+    
+    const handleClick = (num: number) => {
+        setReceiverId(num);
+        dispatch(getMessages({receiverId : num}));
+    }
   return (
     <Drawer
         variant="permanent"
@@ -44,8 +54,8 @@ const Sidebar: React.FC<SidebarProps>= ({ setReceiverId }) => {
         <Toolbar />
         <Box sx={{ overflow: 'auto' }}>
             <List>
-            {userList.map((user) => (
-                <ListItem component="div" key={user.id} onClick={() => setReceiverId(user.id)}>
+            {users.map((user) => (
+                <ListItem component="div" key={user.id} onClick={() => handleClick(user.id)}>
                     <ListItemText primary={user.name} />
                 </ListItem>
             ))}

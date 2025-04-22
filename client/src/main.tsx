@@ -1,25 +1,30 @@
 import React from 'react';
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import thunk, { ThunkMiddleware } from 'redux-thunk';
-import {Provider} from 'react-redux';
-import { composeWithDevTools } from '@redux-devtools/extension';
-import { applyMiddleware, legacy_createStore as createStore, StoreEnhancer } from 'redux';
+import { createRoot } from 'react-dom/client';
+import { Provider } from 'react-redux';
+import { Auth0Provider } from '@auth0/auth0-react';
 
-import Reducers from './components/reducers/index.ts';
-import App from './App.tsx'
-
-const store = createStore(
-  Reducers,
-  composeWithDevTools(applyMiddleware(thunk as unknown as ThunkMiddleware))
-);
+import App from './App.tsx';
+import store from './store.ts';
 
 const rootElement = document.getElementById('root');
+
 if (rootElement) {
   const root = createRoot(rootElement);
   root.render(
-    <Provider store={store}>
-      <App />
-    </Provider>
+    <React.StrictMode>
+      <Auth0Provider
+        domain={import.meta.env.VITE_DOMAIN}
+        clientId={import.meta.env.VITE_CLIENT_ID}
+        authorizationParams={{
+          redirect_uri: window.location.origin + '/callback',
+          audience: import.meta.env.VITE_AUDIENCE,
+        }}
+        cacheLocation="localstorage"
+      >
+        <Provider store={store}>
+          <App />
+        </Provider>
+      </Auth0Provider>
+    </React.StrictMode>
   );
 }
