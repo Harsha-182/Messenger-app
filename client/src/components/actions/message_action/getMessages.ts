@@ -8,9 +8,9 @@ interface FormData {
 
 export function getMessages(formData: FormData = {}) {
     return async(dispatch: Dispatch): Promise<void> => {
-        if(Object.keys(formData).length > 0) {
+        if(Object.keys(formData).length > 0 && formData.receiverId && formData.senderId) {
             const request = {
-                url: `/messages?senderId=2&recieverId=${formData.receiverId}`,
+                url: `/messages?senderId=${formData.senderId}&recieverId=${formData.receiverId}`,
                 method: 'GET' as const,
                 header: {'Access-Control-Allow-Origin': true},
                 // data: {senderId: 2, receiverId: formData.receiverId},

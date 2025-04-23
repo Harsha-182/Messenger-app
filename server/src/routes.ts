@@ -33,6 +33,7 @@ export const Routes = [{
     method: "post",
     route: "/syncuser",
     controller: SyncUserController,
-    action: "save"
+    action: "save",
+    // middlewares: [checkJwt]
 }
 ]

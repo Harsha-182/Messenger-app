@@ -10,6 +10,8 @@ import ListItemText from '@mui/material/ListItemText';
 import { AppDispatch } from '../../store';
 import { getMessages } from "../actions/message_action/getMessages";
 import { RootState } from '../../store';
+import { getUsers } from '../actions/user_action/getUser';
+import { useAuth0 } from '@auth0/auth0-react';
 
 interface User {
     id: number;
@@ -25,6 +27,16 @@ const Sidebar: React.FC<SidebarProps> = ({ setReceiverId }) => {
     const dispatch = useDispatch<AppDispatch>();
     const usersStatus = useSelector((state: RootState) => state.Users);
     let drawerWidth = 300;
+
+    const { getAccessTokenSilently } = useAuth0();
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            const token = await getAccessTokenSilently();
+            dispatch(getUsers({},token));
+        };
+        fetchUsers();
+    }, [dispatch, getAccessTokenSilently]);
 
     useEffect(() => {
         if (usersStatus && usersStatus.data) {
@@ -54,7 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setReceiverId }) => {
         <Toolbar />
         <Box sx={{ overflow: 'auto' }}>
             <List>
-            {users.map((user) => (
+            {users?.map((user) => (
                 <ListItem component="div" key={user.id} onClick={() => handleClick(user.id)}>
                     <ListItemText primary={user.name} />
                 </ListItem>

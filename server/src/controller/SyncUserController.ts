@@ -15,11 +15,10 @@ export class SyncUserController {
 
     private userRepository = AppDataSource.getRepository(User)
 
-    async save(request: Request) {
+    async save(request: Request, response: Response, next: NextFunction) {
         const { email, name, picture, sub, nickname } = request.body;
-        console.log("SyncUserController===================", request.body)
         if (!sub || !email) {
-            return { message: "Missing user info" };
+            return response.status(400).json({ message: "Missing user info" });
         }
 
         let user = await this.userRepository.findOneBy({ sub });
@@ -34,6 +33,6 @@ export class SyncUserController {
             await this.userRepository.save(user);
         }
 
-        return { message: "User synced", user }
+        return response.status(200).json({ ...user });
     }
 }

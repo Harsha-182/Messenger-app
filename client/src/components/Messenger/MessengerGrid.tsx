@@ -11,19 +11,15 @@ import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import MainChat from './MainChat';
 import { RootState } from '../../store';
+import { syncUsers } from '../actions/user_action/syncUser';
 
 const MessengerGrid = () => {
   const dispatch = useDispatch();
-  const { loginWithRedirect, isAuthenticated } = useAuth0();
 
   const [senderId, setSenderId] = useState<number | null>(2);
   const [receiverId, setReceiverId] = useState<number | null>(null);
 
-  useEffect(() => {
-    if(!isAuthenticated){
-      loginWithRedirect()
-    }
-  },[isAuthenticated])
+  const syncuserStatus = useSelector((state: RootState) => state.SyncUser);
 
   return(
     <div>

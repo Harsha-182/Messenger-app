@@ -1,11 +1,25 @@
 interface MessageState {
     status?: 'success' | 'failure' | 'reset';
-    data?: any;
+    data?: Message[] | null;
+}
+
+interface User {
+    id: number;
+    name: string;
+}
+
+interface Message {
+    id?: number;
+    content: string;
+    senderId: number;
+    receiverId: number;
+    sender?: User;
+    receiver?: User;
 }
 
 interface Action {
     type: string;
-    payload?: any;
+    payload?: Message[] | null;
 }
 
 export function GetMessageReducer(state: MessageState = {}, action: Action): MessageState{

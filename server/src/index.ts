@@ -38,15 +38,20 @@ AppDataSource.initialize().then(async () => {
         (app as any)[route.method](
             route.route, 
             ...middlewares,
-            (req: Request, res: Response, next: Function) => {
-            const result = (new (route.controller as any))[route.action](req, res, next)
-            if (result instanceof Promise) {
-                result.then(result => result !== null && result !== undefined ? res.send(result) : undefined)
-
-            } else if (result !== null && result !== undefined) {
-                res.json(result)
+            async(req: Request, res: Response, next: Function) => {
+                try {
+                    const controllerInstance = new (route.controller as any)();
+                    const result = await controllerInstance[route.action](req, res, next);
+    
+                    if (result !== null && result !== undefined && !res.headersSent) {
+                        res.send(result);
+                    }
+                } catch (error) {
+                    console.error("Error in route handler:", error);
+                    res.status(500).json({ message: "Internal server error" });
+                }
             }
-        })
+        )
     })
 
     // Socket.IO connection
