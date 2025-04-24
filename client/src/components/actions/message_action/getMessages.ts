@@ -13,7 +13,6 @@ export function getMessages(formData: FormData = {}) {
                 url: `/messages?senderId=${formData.senderId}&recieverId=${formData.receiverId}`,
                 method: 'GET' as const,
                 header: {'Access-Control-Allow-Origin': true},
-                // data: {senderId: 2, receiverId: formData.receiverId},
             };
 
             await httpHelper(

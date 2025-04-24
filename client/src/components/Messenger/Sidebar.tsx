@@ -19,9 +19,9 @@ interface User {
 }
 
 interface SidebarProps {
-  setReceiverId: (id: number) => void;
+    setActiveChatId: (id: number) => void;
 }
-const Sidebar: React.FC<SidebarProps> = ({ setReceiverId }) => {
+const Sidebar: React.FC<SidebarProps> = ({ setActiveChatId }) => {
     const [users, setUsers] = useState<User[]>([]);
 
     const dispatch = useDispatch<AppDispatch>();
@@ -44,10 +44,6 @@ const Sidebar: React.FC<SidebarProps> = ({ setReceiverId }) => {
         }
     },[usersStatus])
     
-    const handleClick = (num: number) => {
-        setReceiverId(num);
-        dispatch(getMessages({receiverId : num}));
-    }
   return (
     <Drawer
         variant="permanent"
@@ -66,8 +62,10 @@ const Sidebar: React.FC<SidebarProps> = ({ setReceiverId }) => {
         <Toolbar />
         <Box sx={{ overflow: 'auto' }}>
             <List>
-            {users?.map((user) => (
-                <ListItem component="div" key={user.id} onClick={() => handleClick(user.id)}>
+            {users
+            ?.filter((user => user.id !== JSON.parse(localStorage.getItem("userInfo") || "{}").id))
+            .map((user) => (
+                <ListItem component="div" key={user.id} onClick={() => setActiveChatId(user.id)}>
                     <ListItemText primary={user.name} />
                 </ListItem>
             ))}

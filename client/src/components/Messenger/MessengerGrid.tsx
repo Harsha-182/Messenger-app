@@ -1,6 +1,4 @@
-import React, {useEffect, useState} from 'react';
-import { useDispatch, useSelector} from 'react-redux';
-import { useAuth0 } from '@auth0/auth0-react';
+import { useState } from 'react';
 
 import {
   Box,
@@ -10,26 +8,19 @@ import {
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import MainChat from './MainChat';
-import { RootState } from '../../store';
-import { syncUsers } from '../actions/user_action/syncUser';
 
 const MessengerGrid = () => {
-  const dispatch = useDispatch();
+  const [activeChatId, setActiveChatId] = useState<number | null>(null);
 
-  const [senderId, setSenderId] = useState<number | null>(2);
-  const [receiverId, setReceiverId] = useState<number | null>(null);
-
-  const syncuserStatus = useSelector((state: RootState) => state.SyncUser);
-
-  return(
+return(
     <div>
         <>
           <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
               <CssBaseline />
               <Navbar/>
               <Box sx={{ display: 'flex', flexGrow: 1 }}>
-                  <Sidebar setReceiverId={setReceiverId}/>
-                  <MainChat senderId={senderId} receiverId={receiverId}/>
+                  <Sidebar setActiveChatId={setActiveChatId}/>
+                  <MainChat receiverId={activeChatId}/>
               </Box>
           </Box>
         </>

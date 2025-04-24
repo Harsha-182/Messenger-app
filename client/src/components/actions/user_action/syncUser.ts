@@ -13,7 +13,7 @@ interface FormData {
 
 export function syncUsers(formData: FormData = {}, token: string) {
     return async(dispatch: Dispatch): Promise<void> => {
-        // if(Object.keys(formData).length > 0) { 
+        // if(Object.keys(formData).length > 0) {
             const request = {
                 url: `/syncuser`,
                 method: 'POST' as const,
