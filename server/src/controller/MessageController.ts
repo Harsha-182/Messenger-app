@@ -42,7 +42,7 @@ export class MessageController {
               
         } catch(error) {
             console.error("Error fetching messages:", error);
-            return { error: "Internal server error." };
+            response.status(500).json({ error: "Internal server error" });
         }
     }
 

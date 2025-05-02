@@ -17,6 +17,7 @@
     "@mui/material": "^7.0.1",
     "@redux-devtools/extension": "^3.3.0",
     "axios": "^1.8.4",
+    "lodash": "^4.17.21",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@types/axios": "^0.9.36",
+    "@types/lodash": "^4.17.16",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",

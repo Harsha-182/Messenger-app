@@ -35,5 +35,10 @@ export const Routes = [{
     controller: SyncUserController,
     action: "save",
     // middlewares: [checkJwt]
+},{
+    method: 'get',
+    route: '/search',
+    controller: UserController,
+    action: 'search',
 }
 ]

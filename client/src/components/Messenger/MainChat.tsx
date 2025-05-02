@@ -24,9 +24,10 @@ interface Message {
 
 interface MainChatProps {
   receiverId: number | null;
+  setUnreadCounts: React.Dispatch<React.SetStateAction<{ [userId: number]: number }>>
 }
 
-const MainChat:React.FC<MainChatProps> = ({receiverId}) => {
+const MainChat:React.FC<MainChatProps> = ({receiverId, setUnreadCounts}) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const [messages, setMessages] = useState<Message[]>([])
@@ -52,8 +53,13 @@ const MainChat:React.FC<MainChatProps> = ({receiverId}) => {
   useEffect(() => {
     const handleNewMessage = (msg: Message) => {
       let isRelevant = (msg.sender?.id === senderId && msg.receiver?.id === receiverId) || (msg.sender?.id === receiverId && msg.receiver?.id === senderId);
-      if(isRelevant){
+      if (isRelevant) {
         setMessages(prev => Array.isArray(prev) ? [...prev, msg] : [msg]);
+      } else if (msg.receiver?.id === senderId) {
+        setUnreadCounts((prev: { [key: number]: number }) => ({
+          ...prev,
+          [Number(msg.sender?.id)]: (prev[Number(msg.sender?.id)] || 0) + 1,
+        }));
       }
     };
   

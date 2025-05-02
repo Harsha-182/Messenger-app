@@ -31,10 +31,7 @@ export class UserController {
         })
 
         if (!user) {
-            return {
-                status: 404,
-                message: "User not found"
-            }
+            return response.status(404).json({ message: "User not found" });
         }
         return user
     }
@@ -57,18 +54,28 @@ export class UserController {
         let userToRemove = await this.userRepository.findOneBy({ id })
 
         if (!userToRemove) {
-            return {
-                status: 404,
-                message: "User not found"
-            }
+            response.status(404).json({ message: "User not found" })
         }
 
         await this.userRepository.remove(userToRemove)
 
-        return {
-            status: 404,
-            message: "User has been removed"
+       return response.status(200).json({ message: "User deleted successfully" })
+    }
+
+    async search(req:Request, res: Response){
+        const query = req.query.query as string;
+        
+        if(query && query.trim() !== ""){
+            const users = await this.userRepository.createQueryBuilder('user')
+            .where('LOWER(user.name) LIKE :name', { name: `${query.toLowerCase()}%` })
+            .orderBy('user.name', 'ASC')
+            .getMany();
+        
+            return res.status(200).json(users);
         }
+
+        const allUsers = await this.userRepository.find();
+        return res.status(200).json(allUsers);
     }
 
 }

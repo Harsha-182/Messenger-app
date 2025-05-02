@@ -11,7 +11,7 @@ import MainChat from './MainChat';
 
 const MessengerGrid = () => {
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
-
+  const [unreadCounts, setUnreadCounts] = useState<{ [userId: number]: number }>({}); 
 return(
     <div>
         <>
@@ -19,8 +19,14 @@ return(
               <CssBaseline />
               <Navbar/>
               <Box sx={{ display: 'flex', flexGrow: 1 }}>
-                  <Sidebar setActiveChatId={setActiveChatId}/>
-                  <MainChat receiverId={activeChatId}/>
+                  <Sidebar 
+                    setActiveChatId={setActiveChatId} 
+                    unreadCounts={unreadCounts}
+                  />
+                  <MainChat 
+                    receiverId={activeChatId}
+                    setUnreadCounts={setUnreadCounts}
+                  />
               </Box>
           </Box>
         </>
