@@ -23,8 +23,8 @@ export class Messages {
     @Column()
     content: string
 
-    // @Column()
-    // created_at: timestamp
+    @Column()
+    created_at: Date
 
     // @Column()
     // updated_at: timestamp

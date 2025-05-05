@@ -8,7 +8,9 @@ export class MessageController {
     async all(request: Request, response: Response, next: NextFunction) {
         const senderId = parseInt(request.query.senderId as string)
         const receiverId = parseInt(request.query.recieverId as string)
-        
+        const {page = 1, limit = 20} = request.query;
+        const skip = (Number(page) - 1) * Number(limit);
+
         if(!senderId || !receiverId) {
             return { error: "Sender ID and Receiver ID are required." }
         }
@@ -20,9 +22,11 @@ export class MessageController {
                     { sender_id: receiverId, receiver_id: senderId }
                 ],
                 relations: ["sender", "receiver"],
-                // order: {
-                //     created_at: "ASC"
-                // }
+                order: {
+                    created_at: "DESC"
+                },
+                skip,
+                take: Number(limit),
             });
             const safeMessages = messages.map(msg => ({
                 id: msg.id,
@@ -38,7 +42,7 @@ export class MessageController {
                 },
               }));
               
-            return safeMessages
+            return response.status(200).json(safeMessages);
               
         } catch(error) {
             console.error("Error fetching messages:", error);
