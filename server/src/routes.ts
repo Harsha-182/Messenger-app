@@ -2,6 +2,7 @@ import { UserController } from "./controller/UserController"
 import { MessageController }  from "./controller/MessageController"
 import { checkJwt } from './middleware/auth';
 import { SyncUserController } from "./controller/SyncUserController";
+import { NotificationController } from "./controller/NotificationController";
 
 export const Routes = [{
     method: "get",
@@ -40,5 +41,23 @@ export const Routes = [{
     route: '/search',
     controller: UserController,
     action: 'search',
-}
+},
+{
+    method: 'post',
+    route: '/notifications',
+    controller: NotificationController,
+    action: 'addNotification',
+},
+{
+    method: 'post',
+    route: '/notifications/mark-as-read',
+    controller: NotificationController,
+    action: 'markAsRead'
+},
+{
+    method: "get",
+    route: "/notification",
+    controller: NotificationController,
+    action: 'getNotification',
+},
 ]

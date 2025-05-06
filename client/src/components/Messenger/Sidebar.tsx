@@ -16,25 +16,39 @@ import { getUsers } from '../actions/user_action/getUser';
 import { useAuth0 } from '@auth0/auth0-react';
 import { debounce } from "lodash";
 import axios from "axios";
+import { getNotification } from '../actions/notification_action/getNotification';
 
 interface User {
     id: number;
     name: string;
 }
 
+interface Notification {
+    id?: number;
+    senderId: number; 
+    unreadCount: number;
+    sender?: User;
+}
+
 interface SidebarProps {
     setActiveChatId: (id: number) => void;
     unreadCounts: { [userId: number]: number };
 }
-const Sidebar: React.FC<SidebarProps> = ({ setActiveChatId, unreadCounts }) => {
+const Sidebar: React.FC<SidebarProps> = ({ setActiveChatId }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
+    const [notification, setNotification] = useState<Notification[]>([]);
 
     const dispatch = useDispatch<AppDispatch>();
+
     const usersStatus = useSelector((state: RootState) => state.Users);
+    const notificationStatus = useSelector((state: RootState) => state.GetNotification);
+    const clearNotificationStatus = useSelector((state: RootState) => state.ClearNotification);
+
     let drawerWidth = 300;
 
     const { getAccessTokenSilently } = useAuth0();
+    const currentUser = JSON.parse(localStorage.getItem("userInfo") || "{}");
 
     const searchUsers = debounce(async (query: string) => {
         try{
@@ -54,12 +68,6 @@ const Sidebar: React.FC<SidebarProps> = ({ setActiveChatId, unreadCounts }) => {
         fetchUsers();
     }, [dispatch, getAccessTokenSilently]);
 
-    // useEffect(() => {
-    //     if (usersStatus && usersStatus.data) {
-    //         setUsers(usersStatus.data);
-    //     }
-    // },[usersStatus])
-
     useEffect(() => {
           searchUsers(searchQuery);
         return () => {
@@ -67,9 +75,38 @@ const Sidebar: React.FC<SidebarProps> = ({ setActiveChatId, unreadCounts }) => {
         };
     }, [searchQuery]);
 
+    useEffect(() => {
+        dispatch(getNotification({receiverId: currentUser.id}))
+    },[]);
+
+    useEffect(() => {
+        if(notificationStatus && notificationStatus.status === 'success' && 
+            Array.isArray(notificationStatus.data)
+        ){
+            setNotification(notificationStatus.data as Notification[])
+        }
+    },[notificationStatus])
+
+    useEffect(() => {
+        if(clearNotificationStatus && clearNotificationStatus.status === 'success'){
+            setNotification((prev) =>
+                prev?.map((n) => ({
+                    ...n,
+                    unreadCount: 0
+                })) || []
+            );
+        }
+    },[clearNotificationStatus])
+
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(event.target.value);
     }
+
+    const unreadMap = notification?.reduce((acc, curr) => {
+        acc[curr.senderId] = curr.unreadCount;
+        return acc;
+    }, {} as Record<number, number>);
+      
   return (
     <Drawer
         variant="permanent"
@@ -105,8 +142,8 @@ const Sidebar: React.FC<SidebarProps> = ({ setActiveChatId, unreadCounts }) => {
                         setActiveChatId(user.id)
                     }}>
                     <ListItemText primary={user.name} />
-                    {unreadCounts && unreadCounts[user.id] > 0 && (
-                        <Badge badgeContent={unreadCounts[user.id]} color="success" />
+                    {unreadMap && unreadMap[user.id] > 0 && (
+                        <Badge badgeContent={unreadMap[user.id]} color="success" />
                     )}
                 </ListItem>
             ))}

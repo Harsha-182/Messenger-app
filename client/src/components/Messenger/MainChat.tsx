@@ -4,7 +4,9 @@ import { AppDispatch } from '../../store';
 import { Box, Button, TextField, Typography } from "@mui/material";
 import { socket } from "../socket";
 import { getMessages } from "../actions/message_action/getMessages";
+import { saveNotification } from "../actions/notification_action/saveNotification";
 import { RootState } from '../../store';
+import { clearNotification } from "../actions/notification_action/clearNotification";
 
 interface Message {
   id?: number;
@@ -42,17 +44,17 @@ const MainChat: React.FC<MainChatProps> = ({ receiverId, setUnreadCounts }) => {
 
   useEffect(() => {
     const container = containerRef.current;
-  const previousScrollHeight = container?.scrollHeight || 0;
+    const previousScrollHeight = container?.scrollHeight || 0;
 
-  if (senderId && receiverId) {
-    dispatch(getMessages({ senderId, receiverId, page })).then(() => {
-      setTimeout(() => {
-        if (container) {
-          const newScrollHeight = container.scrollHeight;
-          container.scrollTop = newScrollHeight - previousScrollHeight;
-        }
-      }, 100);
-    });
+    if (senderId && receiverId) {
+      dispatch(getMessages({ senderId, receiverId, page })).then(() => {
+        setTimeout(() => {
+          if (container) {
+            const newScrollHeight = container.scrollHeight;
+            container.scrollTop = newScrollHeight - previousScrollHeight;
+          }
+        }, 100);
+      });
   }
   }, [page, senderId, receiverId]);
 
@@ -96,7 +98,6 @@ const MainChat: React.FC<MainChatProps> = ({ receiverId, setUnreadCounts }) => {
         (msg.sender?.id === receiverId && msg.receiver?.id === senderId);
 
       if (isRelevant) {
-        // console.log("New message received:---------------------", message);
         setMessages((prev) => [msg, ...prev]);
 
         if (isAtBottom && containerRef.current) {
@@ -105,6 +106,7 @@ const MainChat: React.FC<MainChatProps> = ({ receiverId, setUnreadCounts }) => {
           }, 100);
         }
       } else if (msg.receiver?.id === senderId) {
+        dispatch(saveNotification({sender_id: msg.sender?.id, receiver_id: msg.receiver?.id, isRead: false}))
         setUnreadCounts((prev) => ({
           ...prev,
           [Number(msg.sender?.id)]: (prev[Number(msg.sender?.id)] || 0) + 1,
@@ -123,6 +125,12 @@ const MainChat: React.FC<MainChatProps> = ({ receiverId, setUnreadCounts }) => {
     setMessages([]);
     setPage(1);
     setHasMore(true);
+  }, [receiverId]);
+
+  useEffect(() => {
+    if (receiverId && senderId) {
+      dispatch(clearNotification({otherUser: receiverId, currentUser: senderId}))
+    }
   }, [receiverId]);
 
   const sendMessage = () => {
