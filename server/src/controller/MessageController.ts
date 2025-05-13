@@ -31,7 +31,7 @@ export class MessageController {
             const safeMessages = messages.map(msg => ({
                 id: msg.id,
                 content: msg.content,
-                // created_at: msg.created_at,
+                created_at: msg.created_at,
                 sender: {
                   id: msg.sender.id,
                   name: msg.sender.name,

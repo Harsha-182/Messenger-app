@@ -1,224 +1,353 @@
 import { useState, useEffect, useRef } from "react";
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch } from '../../store';
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "../../store";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import { socket } from "../socket";
 import { getMessages } from "../actions/message_action/getMessages";
 import { saveNotification } from "../actions/notification_action/saveNotification";
-import { RootState } from '../../store';
+import { RootState } from "../../store";
 import { clearNotification } from "../actions/notification_action/clearNotification";
+import { getNotification } from "../actions/notification_action/getNotification";
+import Header from "./Header";
+import { set } from "lodash";
 
 interface Message {
-  id?: number;
-  content: string;
-  senderId: number;
-  receiverId: number;
-  sender?: {
-    id: number;
-    name: string;
-  };
-  receiver?: {
-    id: number;
-    name: string;
-  };
+	id?: number;
+	content: string;
+	senderId: number;
+	receiverId: number;
+	createdAt?: string;
+	sender?: {
+		id: number;
+		name: string;
+	};
+	receiver?: {
+		id: number;
+		name: string;
+	};
 }
 
 interface MainChatProps {
-  receiverId: number | null;
-  setUnreadCounts: React.Dispatch<React.SetStateAction<{ [userId: number]: number }>>;
+	receiverId: {id: number; name: string, picture: string} | null;
+	setUnreadCounts: React.Dispatch<React.SetStateAction<{ [userId: number]: number }>>;
+	unreadCounts: { [userId: number]: number };
 }
 
-const MainChat: React.FC<MainChatProps> = ({ receiverId, setUnreadCounts }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const containerRef = useRef<HTMLDivElement | null>(null);
+const MainChat: React.FC<MainChatProps> = ({ receiverId, setUnreadCounts, unreadCounts }) => {
+	const dispatch = useDispatch<AppDispatch>();
+	const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState<string>("");
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isAtBottom, setIsAtBottom] = useState(true);
+	const [messages, setMessages] = useState<Message[]>([]);
+	const [input, setInput] = useState<string>("");
+	const [page, setPage] = useState(1);
+	const [hasMore, setHasMore] = useState(true);
+	const [isAtBottom, setIsAtBottom] = useState(true);
 
-  const messageStatus = useSelector((state: RootState) => state.Message);
-  const currentUser = JSON.parse(localStorage.getItem("userInfo") || "{}");
-  const senderId = currentUser?.id;
+	const messageStatus = useSelector((state: RootState) => state.Message);
+	const currentUser = JSON.parse(localStorage.getItem("userInfo") || "{}");
+	
+	const senderId = currentUser?.id;
+	const hasMoreRef = useRef(hasMore);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    const previousScrollHeight = container?.scrollHeight || 0;
+	useEffect(() => {
+		const container = containerRef.current;
+		const previousScrollHeight = container?.scrollHeight || 0;
 
-    if (senderId && receiverId) {
-      dispatch(getMessages({ senderId, receiverId, page })).then(() => {
-        setTimeout(() => {
-          if (container) {
-            const newScrollHeight = container.scrollHeight;
-            container.scrollTop = newScrollHeight - previousScrollHeight;
-          }
-        }, 100);
-      });
-  }
-  }, [page, senderId, receiverId]);
+		if (senderId && receiverId?.id) {
+			dispatch(getMessages({ senderId, receiverId: receiverId?.id, page })).then(() => {
+				setTimeout(() => {
+					if (container) {
+						const newScrollHeight = container.scrollHeight;
+						container.scrollTop = newScrollHeight - previousScrollHeight;
+					}
+				}, 100);
+			});
+		}
+	}, [page, senderId, receiverId?.id]);
 
-  // Handle fetched messages
-  useEffect(() => {
-    const newMessages: Message[] = messageStatus.data || [];
+	useEffect(() => {
+		if (messageStatus && messageStatus?.status === "success") {
+			const newMessages: Message[] = messageStatus.data || [];
 
-    if (newMessages.length < 20) {
-      setHasMore(false);
-    }
+			if (newMessages.length < 20) {
+				setHasMore(false);
+			}
 
-    if (newMessages.length > 0) {
-      setMessages((prev) => [...prev, ...newMessages]);
-    }
-  }, [messageStatus]);
+			if (page === 1) {
+				setMessages(newMessages);
+			} else {
+				setMessages((prev) => [...prev, ...newMessages]);
+			}
+		}
+	}, [messageStatus]);
 
-  // Handle scroll to top pagination
-  useEffect(() => {
-    const container = containerRef.current;
+	useEffect(() => {
+		const container = containerRef.current;
+		if (!container) return;
 
-    const handleScroll = () => {
-      if (!container) return;
+		let timeoutId: ReturnType<typeof setTimeout>;
 
-      if (container.scrollTop === 0 && hasMore) {
-        setPage((prev) => prev + 1);
-      }
+		const handleScroll = () => {
+			if (!container) return;
+			const threshold = 100;
+			const isNearTop = container.scrollTop <= threshold;
 
-      const atBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 10;
-      setIsAtBottom(atBottom);
-    };
+			if (isNearTop && hasMore) {
+				clearTimeout(timeoutId);
+				timeoutId = setTimeout(() => {
+					setPage((prev) => prev + 1);
+				}, 200);
+			}
 
-    container?.addEventListener("scroll", handleScroll);
-    return () => container?.removeEventListener("scroll", handleScroll);
-  }, [hasMore]);
+			const atBottom =
+				container.scrollHeight - container.scrollTop <= container.clientHeight + 10;
+			setIsAtBottom(atBottom);
+		};
 
-  // Listen for new messages
-  useEffect(() => {
-    const handleNewMessage = (msg: Message) => {
-      const isRelevant =
-        (msg.sender?.id === senderId && msg.receiver?.id === receiverId) ||
-        (msg.sender?.id === receiverId && msg.receiver?.id === senderId);
+		container.addEventListener("scroll", handleScroll);
+		return () => {
+			container.removeEventListener("scroll", handleScroll);
+			clearTimeout(timeoutId);
+		};
+	}, [hasMore]);
 
-      if (isRelevant) {
-        setMessages((prev) => [msg, ...prev]);
+	useEffect(() => {
+		const handleNewMessage = (msg: Message) => {
+			const isRelevant =
+				(msg.sender?.id === senderId && msg.receiver?.id === receiverId?.id) ||
+				(msg.sender?.id === receiverId?.id && msg.receiver?.id === senderId);
 
-        if (isAtBottom && containerRef.current) {
-          setTimeout(() => {
-            containerRef.current!.scrollTop = containerRef.current!.scrollHeight;
-          }, 100);
-        }
-      } else if (msg.receiver?.id === senderId) {
-        dispatch(saveNotification({sender_id: msg.sender?.id, receiver_id: msg.receiver?.id, isRead: false}))
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [Number(msg.sender?.id)]: (prev[Number(msg.sender?.id)] || 0) + 1,
-        }));
-      }
-    };
+			if (isRelevant) {
+				setMessages((prev) => [msg, ...prev]);
 
-    socket.on("newMessage", handleNewMessage);
-    return () => {
-      socket.off("newMessage", handleNewMessage);
-    };
-  }, [senderId, receiverId, isAtBottom]);
+				if (isAtBottom && containerRef.current) {
+					setTimeout(() => {
+						containerRef.current!.scrollTop = containerRef.current!.scrollHeight;
+					}, 100);
+				}
+			} else if (msg.receiver?.id === senderId) {
+				dispatch(
+					saveNotification({
+						sender_id: msg.sender?.id,
+						receiver_id: msg.receiver?.id,
+						isRead: false,
+					})
+				);
+				dispatch(getNotification({ receiverId: currentUser.id }));
+				setUnreadCounts((prev) => ({
+					...prev,
+					[Number(msg.sender?.id)]: (prev[Number(msg.sender?.id)] || 0) + 1,
+				}));
+			}
+		};
 
-  // Reset messages when chat changes
-  useEffect(() => {
-    setMessages([]);
-    setPage(1);
-    setHasMore(true);
-  }, [receiverId]);
+		socket.on("newMessage", handleNewMessage);
 
-  useEffect(() => {
-    if (receiverId && senderId) {
-      dispatch(clearNotification({otherUser: receiverId, currentUser: senderId}))
-    }
-  }, [receiverId]);
+		return () => {
+			socket.off("newMessage", handleNewMessage);
+		};
+	}, [senderId, receiverId?.id, isAtBottom]);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+	useEffect(() => {
+		setMessages([]);
+		setPage(1);
+		setHasMore(true);
+	}, [receiverId?.id]);
 
-    const message = { content: input, senderId, receiverId };
-    socket.emit("sendMessage", message);
-    setInput("");
+	useEffect(() => {
+		if (receiverId?.id && senderId) {
+			dispatch(clearNotification({ otherUser: receiverId?.id, currentUser: senderId }));
+			setUnreadCounts((prev) => {
+				const updatedCounts = { ...prev };
+				delete updatedCounts[receiverId?.id];
+				return updatedCounts;
+			})
+		}
+	}, [receiverId?.id]);
 
-    setTimeout(() => {
-      if (containerRef.current) {
-        containerRef.current.scrollTop = containerRef.current.scrollHeight;
-      }
-    }, 100);
-  };
+	const sendMessage = () => {
+		if (!input.trim()) return;
 
-  return (
-    <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', padding: 2, height: '100vh', backgroundColor: '#fafafa' }}>
-      {receiverId ? (
-        <>
-          <Box sx={{ p: 2, borderBottom: '1px solid #dbdbdb', backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Typography variant="h6" sx={{ fontWeight: 500 }}>Chat</Typography>
-          </Box>
+		const message = { content: input, senderId, receiverId: receiverId?.id };
+		socket.emit("sendMessage", message);
+		setInput("");
 
-          <Box
-            ref={containerRef}
-            sx={{
-              flexGrow: 1,
-              p: 2,
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-              backgroundColor: '#fafafa',
-            }}
-          >
-            {[...messages].reverse().map((msg, index) => (
-              <Box
-                key={index}
-                sx={{
-                  alignSelf: msg.sender?.id === currentUser.id ? 'flex-end' : 'flex-start',
-                  maxWidth: '70%',
-                  backgroundColor: msg.sender?.id === currentUser.id ? '#dcf8c6' : '#ffffff',
-                  borderRadius: 2,
-                  p: 1.5,
-                  boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
-                }}
-              >
-                <Typography variant="body1" sx={{ color: '#333' }}>{msg.content}</Typography>
-              </Box>
-            ))}
-          </Box>
+		setTimeout(() => {
+			if (containerRef.current) {
+				containerRef.current.scrollTop = containerRef.current.scrollHeight;
+			}
+		}, 100);
+	};
 
-          <Box sx={{ display: 'flex', gap: 1, p: 2, borderTop: '1px solid #dbdbdb', backgroundColor: '#ffffff' }}>
-            <TextField
-              fullWidth
-              placeholder="Message..."
-              size="small"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '20px',
-                  backgroundColor: '#f0f0f0',
-                },
-              }}
-            />
-            <Button
-              variant="contained"
-              onClick={sendMessage}
-              sx={{
-                borderRadius: '20px',
-                textTransform: 'none',
-                backgroundColor: '#0095f6',
-                '&:hover': { backgroundColor: '#007bb5' },
-              }}
-            >
-              Send
-            </Button>
-          </Box>
-        </>
-      ) : (
-        <Box sx={{ p: 2, textAlign: 'center', flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fafafa' }}>
-          <Typography variant="h6" sx={{ color: '#999' }}>Select a user to start chatting</Typography>
-        </Box>
-      )}
-    </Box>
-  );
+	return (
+		<Box
+			style = {{ font : 'Work Sans' }}
+			sx={{
+				flexGrow: 1,
+				display: "flex",
+				flexDirection: "column",
+				height: "100vh",
+			}}
+		>
+			{receiverId?.id ? (
+				<>	
+					<Header
+						name = {receiverId.name || ""}
+						picture = {receiverId.picture || ""}
+					/>
+
+					<Box
+						ref={containerRef}
+						sx={{
+							flex: 1,
+							minHeight: 0,
+							overflow: "auto",
+							p: 2,
+							overflowY: "auto",
+							overflowX: "hidden",
+							display: "flex",
+							flexDirection: "column",
+							gap: 2,
+							position: "relative",
+							height: "100%",
+							width: "100%",
+							backgroundImage: 'url("/d325851813073ade6648bfeae65648dea3a0d74d.jpg")',
+							backgroundRepeat: "repeat",
+							backgroundSize: "auto",
+							backgroundPosition: "top left",
+							opacity: 0.8,
+							backgroundColor: "rgba(245, 169, 4, 0.05)",
+							backgroundBlendMode: "overlay",
+
+							"&::-webkit-scrollbar": {
+								display: "none",
+							},
+
+							// Hide scrollbar for Firefox
+							scrollbarWidth: "none",
+						}}
+					>
+						<Box
+							sx={{
+								position: "absolute",
+								top: 0,
+								left: 0,
+								right: 0,
+								bottom: 0,
+								backgroundImage: 'url("/d325851813073ade6648bfeae65648dea3a0d74d.jpg")',
+								backgroundRepeat: "repeat",
+								backgroundSize: "auto",
+								backgroundPosition: "top left",
+								opacity: 0.05, // 5% opacity
+								zIndex: 0,
+							}}
+						/>
+						<Box
+							sx={{
+								position: "relative",
+								zIndex: 2,
+								display: "flex",
+								flexDirection: "column",
+								gap: 1.5,
+							}}
+							>
+							{[...messages].reverse().map((msg, index) => {
+								const isMe = msg.sender?.id === currentUser.id;
+
+								return (
+								<Box
+									key={index}
+									sx={{
+									display: "flex",
+									justifyContent: isMe ? "flex-end" : "flex-start",
+									}}
+								>
+									<Box
+									sx={{
+										px: 2,
+										py: 1,
+										maxWidth: "75%",
+										bgcolor: isMe ? "#D9FDD3" : "#FFFFFF",
+										color: "#000",
+										borderRadius: "16px",
+										borderTopLeftRadius: isMe ? "16px" : 0,
+										borderTopRightRadius: isMe ? 0 : "16px",
+										boxShadow: 1,
+										wordBreak: "break-word",
+									}}
+									>
+									<Typography variant="body2" sx={{ 
+										fontSize: "14px",
+										fontWeight: 400,
+										font: "Work Sans !important",
+										color: '#111B21',
+										lineHeight: '100%',
+										letterSpacing: '-2.5%',
+										 }}>
+										{msg.content}
+									</Typography>
+									</Box>
+								</Box>
+								);
+							})}
+							</Box>
+					</Box>
+
+					<Box
+						sx={{
+							display: "flex",
+							gap: 1,
+							p: 2,
+							borderTop: "1px solid #dbdbdb",
+							backgroundColor: "#F0F2F5",
+						}}
+					>
+						<TextField
+							fullWidth
+							placeholder="Type a message"
+							size="small"
+							value={input}
+							onChange={(e) => setInput(e.target.value)}
+							sx={{
+								"& .MuiOutlinedInput-root": {
+									borderRadius: "10px",
+									backgroundColor: "#FFFFFF",
+								},
+							}}
+						/>
+						<Button
+							variant="contained"
+							onClick={sendMessage}
+							sx={{
+								borderRadius: "20px",
+								textTransform: "none",
+								backgroundColor: "#0095f6",
+								"&:hover": { backgroundColor: "#007bb5" },
+							}}
+						>
+							Send
+						</Button>
+					</Box>
+				</>
+			) : (
+				<Box
+					sx={{
+						p: 2,
+						textAlign: "center",
+						flexGrow: 1,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						backgroundColor: "#fafafa",
+					}}
+				>
+					<Typography variant="h6" sx={{ color: "#999" }}>
+						Select a user to start chatting
+					</Typography>
+				</Box>
+			)}
+		</Box>
+	);
 };
 
 export default MainChat;
