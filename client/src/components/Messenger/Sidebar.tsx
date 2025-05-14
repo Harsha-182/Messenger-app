@@ -13,9 +13,11 @@ import {
 	IconButton,
 	useMediaQuery,
 	AppBar,
+	Button,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 import { AppDispatch, RootState } from '../../store';
 import { getMessages } from "../actions/message_action/getMessages";
@@ -57,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setActiveChatId }) => {
 	const isMobile = useMediaQuery('(max-width:600px)');
 	const drawerWidth = 300;
 
-	const { getAccessTokenSilently } = useAuth0();
+	const { getAccessTokenSilently, logout } = useAuth0();
 	const currentUser = JSON.parse(localStorage.getItem("userInfo") || "{}");
 
 	const searchUsers = debounce(async (query: string) => {
@@ -122,6 +124,14 @@ const Sidebar: React.FC<SidebarProps> = ({ setActiveChatId }) => {
 		setMobileOpen(!mobileOpen);
 	};
 
+	const handleLogout = () => {
+		logout({
+			logoutParams: {
+			returnTo: window.location.origin,
+			},
+		});
+	};
+
 	const drawerContent = (
 		<Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
 			<Box
@@ -157,6 +167,15 @@ const Sidebar: React.FC<SidebarProps> = ({ setActiveChatId }) => {
 				>
 					{currentUser.name}
 				</Typography>
+			
+					<LogoutIcon
+						onClick={handleLogout}
+						sx={{
+							cursor: 'pointer',
+							// color: '#008069',
+							marginLeft: 'auto',
+						}}
+					 />
 			</Box>
 
 			<Box p={2}>
